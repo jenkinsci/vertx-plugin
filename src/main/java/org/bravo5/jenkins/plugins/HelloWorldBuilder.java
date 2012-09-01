@@ -1,19 +1,27 @@
 package org.bravo5.jenkins.plugins;
+
 import hudson.Launcher;
 import hudson.Extension;
+
 import hudson.util.FormValidation;
+
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
+
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+
+import java.util.logging.Logger;
 
 /**
  * Sample {@link Builder}.
@@ -33,6 +41,7 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class HelloWorldBuilder extends Builder {
+    private final Logger logger = Logger.getLogger(getClass().getName());
 
     private final String name;
 
@@ -50,15 +59,21 @@ public class HelloWorldBuilder extends Builder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public boolean perform(final AbstractBuild build,
+                           final Launcher launcher,
+                           final BuildListener listener)
+    {
         // This is where you 'build' the project.
         // Since this is a dummy, we just say 'hello world' and call that a build.
 
         // This also shows how you can consult the global configuration of the builder
-        if (getDescriptor().getUseFrench())
-            listener.getLogger().println("Bonjour, "+name+"!");
-        else
-            listener.getLogger().println("Hello, "+name+"!");
+        if (getDescriptor().getUseFrench()) {
+            listener.getLogger().println("Bonjour, " + name + "!");
+        }
+        else {
+            listener.getLogger().println("Hello, " + name + "!");
+        }
+        
         return true;
     }
 
