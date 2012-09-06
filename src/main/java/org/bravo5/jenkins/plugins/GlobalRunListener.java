@@ -8,6 +8,7 @@ import hudson.Extension;
 import java.util.logging.Logger;
 
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.json.JsonArray;
 
 import hudson.util.XStream2;
 import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
@@ -48,6 +49,23 @@ public class GlobalRunListener extends RunListener<Run> {
                     .putString("url", r.getParent().getUrl())
             )
         ;
+
+        JsonArray artifactsArr = new JsonArray();
+        json.putArray("artifacts", artifactsArr);
+
+        if (r.getArtifacts() != null) {
+            for (Object artObj : r.getArtifacts()) {
+                Run.Artifact artifact = (Run.Artifact) artObj;
+
+                artifactsArr.addObject(
+                    new JsonObject()
+                        .putString("displayPath", artifact.getDisplayPath())
+                        .putString("fileName", artifact.getFileName())
+                        // .putNumber("fileSize", artifact.getFileSize())
+                        .putString("href", artifact.getHref())
+                );
+            }
+        }
 
         return json;
     }
