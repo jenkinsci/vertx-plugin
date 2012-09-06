@@ -22,7 +22,7 @@ public class PluginImpl extends Plugin {
     public void start() throws Exception {
         logger.info("Vert.x: events for everyone!");
         
-        vertx = Vertx.newVertx(25000, "0.0.0.0");
+        vertx = Vertx.newVertx(25000, "0.0.0.0"); // @todo make configurable
 
         handler = new JenkinsEventBusHandler(vertx.eventBus());
 
@@ -42,14 +42,20 @@ public class PluginImpl extends Plugin {
     // }}}
     
     // {{{ ebPublish
-    static void ebPublish(final String addr, final JsonObject obj) {
+    /**
+     * Publishes an EventBus message, possibly from another thread.
+     *
+     * @param addr the destination address
+     * @param msg the message to publish
+     */
+    static void ebPublish(final String addr, final JsonObject msg) {
         ClassLoader oldContextClassLoader =
             Thread.currentThread().getContextClassLoader();
 
         Thread.currentThread().setContextClassLoader(CLASS_LOADER);
 
         try { 
-            getVertx().eventBus().publish(addr, obj);
+            getVertx().eventBus().publish(addr, msg);
         } finally { 
            Thread.currentThread().setContextClassLoader(oldContextClassLoader); 
         } 
