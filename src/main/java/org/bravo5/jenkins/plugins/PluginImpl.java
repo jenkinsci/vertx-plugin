@@ -19,7 +19,7 @@ public class PluginImpl extends Plugin {
     public void start() throws Exception {
         logger.info("Vert.x: events for everyone!");
         
-        vertx = Vertx.newVertx(25000, "10.0.1.9");
+        vertx = Vertx.newVertx(25000, "0.0.0.0");
         vertx.eventBus().publish("jenkins-vertx", new JsonObject().putString("action", "started"));
     }
     // }}}

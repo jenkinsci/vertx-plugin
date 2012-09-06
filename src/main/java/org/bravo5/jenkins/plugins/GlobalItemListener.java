@@ -10,20 +10,28 @@ import java.util.logging.Logger;
 import java.util.Map;
 
 import org.vertx.java.core.json.JsonObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
+
+import hudson.util.XStream2;
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 
 @Extension
 public class GlobalItemListener extends ItemListener {
     private final Logger logger = Logger.getLogger(getClass().getName());
-
-    private final ObjectMapper objectMapper =
-        new ObjectMapper()
-            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-            .configure(MapperFeature.AUTO_DETECT_IS_GETTERS, false)
-            .configure(MapperFeature.REQUIRE_SETTERS_FOR_GETTERS, true);
     
+    // {{{ itemToJson
+    private JsonObject itemToJson(final Item item) {
+        XStream2 xstream = new XStream2(new JsonHierarchicalStreamDriver());
+
+        JsonObject json = new JsonObject(xstream.toXML(item))
+            .putString("name", item.getName())
+            .putString("fullName", item.getFullName())
+            .putString("url", item.getUrl())
+        ;
+
+        return json;
+    }
+    // }}}
+
     // {{{ onLoaded
     /** {@inheritDoc} */
     @Override
@@ -49,7 +57,7 @@ public class GlobalItemListener extends ItemListener {
                 "jenkins.item",
                 new JsonObject()
                     .putString("action", "created")
-                    .putObject("item", new JsonObject(objectMapper.convertValue(item, Map.class)))
+                    .putObject("item", itemToJson(item))
             );
     }
     // }}}
@@ -65,7 +73,7 @@ public class GlobalItemListener extends ItemListener {
                 "jenkins.item",
                 new JsonObject()
                     .putString("action", "updated")
-                    .putObject("item", new JsonObject(objectMapper.convertValue(item, Map.class)))
+                    .putObject("item", itemToJson(item))
             );
     }
     // }}}
@@ -81,8 +89,8 @@ public class GlobalItemListener extends ItemListener {
                 "jenkins.item",
                 new JsonObject()
                     .putString("action", "copied")
-                    .putObject("src", new JsonObject(objectMapper.convertValue(src, Map.class)))
-                    .putObject("item", new JsonObject(objectMapper.convertValue(item, Map.class)))
+                    .putObject("src", itemToJson(src))
+                    .putObject("item", itemToJson(item))
             );
     }
     // }}}
@@ -98,9 +106,9 @@ public class GlobalItemListener extends ItemListener {
                 "jenkins.item",
                 new JsonObject()
                     .putString("action", "renamed")
+                    .putObject("item", itemToJson(item))
                     .putString("oldName", oldName)
                     .putString("newName", newName)
-                    .putObject("item", new JsonObject(objectMapper.convertValue(item, Map.class)))
             );
     }
     // }}}
@@ -116,7 +124,7 @@ public class GlobalItemListener extends ItemListener {
                 "jenkins.item",
                 new JsonObject()
                     .putString("action", "deleted")
-                    .putObject("item", new JsonObject(objectMapper.convertValue(item, Map.class)))
+                    .putObject("item", itemToJson(item))
             );
     }
     // }}}

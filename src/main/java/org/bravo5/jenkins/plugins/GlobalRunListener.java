@@ -8,9 +8,9 @@ import hudson.Extension;
 import java.util.logging.Logger;
 
 import org.vertx.java.core.json.JsonObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
+
+import hudson.util.XStream2;
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 
 import java.util.Map;
 
@@ -18,28 +18,38 @@ import java.util.Map;
 public class GlobalRunListener extends RunListener<Run> {
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    private final ObjectMapper objectMapper =
-        new ObjectMapper()
-            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-            .configure(MapperFeature.AUTO_DETECT_IS_GETTERS, false)
-            .configure(MapperFeature.REQUIRE_SETTERS_FOR_GETTERS, true)
-            .configure(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS, false);
-    
     // {{{ runToJson
     private JsonObject runToJson(final Run r) {
-        String resultStr = "unknown";
-        
-        if (r.getResult() != null) {
-            resultStr = r.getResult().toString();
-        }
-        
-        return new JsonObject()
+        XStream2 xstream = new XStream2(new JsonHierarchicalStreamDriver());
+
+        JsonObject json = new JsonObject()
             .putString("id", r.getId())
             .putNumber("num", r.getNumber())
-            .putString("result", resultStr)
-            .putNumber("timestamp", r.getTimeInMillis())
+            .putNumber("scheduledTimestamp", r.getTimeInMillis())
             .putString("url", r.getUrl())
+            .putString("fullDisplayName", r.getFullDisplayName())
+            .putString("externalizableId", r.getExternalizableId())
+
+            // artifacts aren't serializing in a usable fashion
+            // .putObject("artifacts", new JsonObject(xstream.toXML(r.getArtifacts())))
+
+            // actions
+            // causes
+            // duration
+            .putObject("build", new JsonObject(xstream.toXML(r)))
+            .putObject("nextBuild", new JsonObject(xstream.toXML(r.getNextBuild())))
+            .putObject("previousBuild", new JsonObject(xstream.toXML(r.getPreviousBuild())))
+
+            .putObject(
+                "parent",
+                new JsonObject(xstream.toXML(r.getParent()))
+                    .putString("name", r.getParent().getName())
+                    .putString("fullName", r.getParent().getFullName())
+                    .putString("url", r.getParent().getUrl())
+            )
         ;
+
+        return json;
     }
     // }}}
     
