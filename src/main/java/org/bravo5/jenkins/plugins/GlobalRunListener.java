@@ -61,15 +61,12 @@ public class GlobalRunListener extends RunListener<Run> {
             "in onStarted(%s, …)", r
         ));
 
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.run",
-                new JsonObject()
-                    .putString("action", "started")
-                    .putObject("run", runToJson(r))
-            );
+        PluginImpl.ebPublish(
+            "jenkins.run",
+            new JsonObject()
+                .putString("action", "started")
+                .putObject("run", runToJson(r))
+        );
     }
     // }}}
     
@@ -81,15 +78,12 @@ public class GlobalRunListener extends RunListener<Run> {
             "in onCompleted(%s, …)", r
         ));
 
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.run",
-                new JsonObject()
-                    .putString("action", "completed")
-                    .putObject("run", runToJson(r))
-            );
+        PluginImpl.ebPublish(
+            "jenkins.run",
+            new JsonObject()
+                .putString("action", "completed")
+                .putObject("run", runToJson(r))
+        );
     }
     // }}}
     
@@ -97,16 +91,12 @@ public class GlobalRunListener extends RunListener<Run> {
     /** {@inheritDoc} */
     @Override
     public void onFinalized(final Run r) {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.run",
-                new JsonObject()
-                    .putString("action", "finalized")
-                    .putObject("run", runToJson(r))
-            );
-
+        PluginImpl.ebPublish(
+            "jenkins.run",
+            new JsonObject()
+                .putString("action", "finalized")
+                .putObject("run", runToJson(r))
+        );
     }
     // }}}
     
@@ -114,16 +104,12 @@ public class GlobalRunListener extends RunListener<Run> {
     /** {@inheritDoc} */
     @Override
     public void onDeleted(final Run r) {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.run",
-                new JsonObject()
-                    .putString("action", "deleted")
-                    .putObject("run", runToJson(r))
-            );
-
+        PluginImpl.ebPublish(
+            "jenkins.run",
+            new JsonObject()
+                .putString("action", "deleted")
+                .putObject("run", runToJson(r))
+        );
     }
     // }}}
 }

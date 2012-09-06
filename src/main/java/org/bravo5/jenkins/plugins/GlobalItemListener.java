@@ -36,13 +36,10 @@ public class GlobalItemListener extends ItemListener {
     /** {@inheritDoc} */
     @Override
     public void onLoaded() {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.item",
-                new JsonObject().putString("action", "allLoaded")
-            );
+        PluginImpl.ebPublish(
+            "jenkins.item",
+            new JsonObject().putString("action", "allLoaded")
+        );
     }
     // }}}
 
@@ -50,15 +47,12 @@ public class GlobalItemListener extends ItemListener {
     /** {@inheritDoc} */
     @Override
     public void onCreated(final Item item) {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.item",
-                new JsonObject()
-                    .putString("action", "created")
-                    .putObject("item", itemToJson(item))
-            );
+        PluginImpl.ebPublish(
+            "jenkins.item",
+            new JsonObject()
+                .putString("action", "created")
+                .putObject("item", itemToJson(item))
+        );
     }
     // }}}
     
@@ -66,15 +60,12 @@ public class GlobalItemListener extends ItemListener {
     /** {@inheritDoc} */
     @Override
     public void onUpdated(final Item item) {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.item",
-                new JsonObject()
-                    .putString("action", "updated")
-                    .putObject("item", itemToJson(item))
-            );
+        PluginImpl.ebPublish(
+            "jenkins.item",
+            new JsonObject()
+                .putString("action", "updated")
+                .putObject("item", itemToJson(item))
+        );
     }
     // }}}
     
@@ -82,16 +73,13 @@ public class GlobalItemListener extends ItemListener {
     /** {@inheritDoc} */
     @Override
     public void onCopied(final Item src, final Item item) {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.item",
-                new JsonObject()
-                    .putString("action", "copied")
-                    .putObject("src", itemToJson(src))
-                    .putObject("item", itemToJson(item))
-            );
+        PluginImpl.ebPublish(
+            "jenkins.item",
+            new JsonObject()
+                .putString("action", "copied")
+                .putObject("src", itemToJson(src))
+                .putObject("item", itemToJson(item))
+        );
     }
     // }}}
     
@@ -99,17 +87,14 @@ public class GlobalItemListener extends ItemListener {
     /** {@inheritDoc} */
     @Override
     public void onRenamed(final Item item, final String oldName, final String newName) {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.item",
-                new JsonObject()
-                    .putString("action", "renamed")
-                    .putObject("item", itemToJson(item))
-                    .putString("oldName", oldName)
-                    .putString("newName", newName)
-            );
+        PluginImpl.ebPublish(
+            "jenkins.item",
+            new JsonObject()
+                .putString("action", "renamed")
+                .putObject("item", itemToJson(item))
+                .putString("oldName", oldName)
+                .putString("newName", newName)
+        );
     }
     // }}}
     
@@ -117,15 +102,12 @@ public class GlobalItemListener extends ItemListener {
     /** {@inheritDoc} */
     @Override
     public void onDeleted(final Item item) {
-        PluginImpl
-            .getVertx()
-            .eventBus()
-            .publish(
-                "jenkins.item",
-                new JsonObject()
-                    .putString("action", "deleted")
-                    .putObject("item", itemToJson(item))
-            );
+        PluginImpl.ebPublish(
+            "jenkins.item",
+            new JsonObject()
+                .putString("action", "deleted")
+                .putObject("item", itemToJson(item))
+        );
     }
     // }}}
 }

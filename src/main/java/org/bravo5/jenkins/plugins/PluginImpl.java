@@ -10,9 +10,12 @@ import java.util.logging.Logger;
 
 public class PluginImpl extends Plugin {
     private final Logger logger = Logger.getLogger(getClass().getName());
-    
+    private static final ClassLoader CLASS_LOADER = PluginImpl.class.getClassLoader();
+
     private static Vertx vertx;
     
+    private JenkinsEventBusHandler handler;
+
     // {{{ start
     /** {@inheritDoc} */
     @Override
@@ -34,13 +37,29 @@ public class PluginImpl extends Plugin {
     }
     // }}}
     
+    // {{{ ebPublish
+    static void ebPublish(final String addr, final JsonObject obj) {
+        ClassLoader oldContextClassLoader =
+            Thread.currentThread().getContextClassLoader();
+
+        Thread.currentThread().setContextClassLoader(CLASS_LOADER);
+
+        try { 
+            getVertx().eventBus().publish(addr, obj);
+        } finally { 
+           Thread.currentThread().setContextClassLoader(oldContextClassLoader); 
+        } 
+
+    }
+    // }}}
+
     // {{{ getInstance
     /** 
      * Getter for instance.
      *
      * @return value for instance
      */
-    public static final Vertx getVertx() {
+    private static final Vertx getVertx() {
         if (vertx == null) {
             throw new IllegalStateException("plugin not started");
         }
@@ -48,5 +67,4 @@ public class PluginImpl extends Plugin {
         return vertx;
     }
     // }}}
-    
 }
