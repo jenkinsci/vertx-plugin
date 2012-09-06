@@ -23,6 +23,9 @@ public class PluginImpl extends Plugin {
         logger.info("Vert.x: events for everyone!");
         
         vertx = Vertx.newVertx(25000, "0.0.0.0");
+
+        handler = new JenkinsEventBusHandler(vertx.eventBus());
+
         vertx.eventBus().publish("jenkins-vertx", new JsonObject().putString("action", "started"));
     }
     // }}}
@@ -32,7 +35,8 @@ public class PluginImpl extends Plugin {
     @Override
     public void stop() {
         logger.info("shutting down");
-        
+
+        handler.close();
         vertx.eventBus().publish("jenkins-vertx", new JsonObject().putString("action", "stopped"));
     }
     // }}}
