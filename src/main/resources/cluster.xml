@@ -1,3 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copied from Vert.x 1.2.3.final distribution.
+-->
 <hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-basic.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -22,14 +26,14 @@
                 <region>us-east-1</region>
             </aws>
         </join>
-        
+
         <!--
         If you have more than one network interface, edit this to select which
         one you want to use
-        -->
         <interfaces enabled="true">
             <interface>10.20.30.93</interface>
         </interfaces>
+        -->
         
         <symmetric-encryption enabled="false">
             <!--
