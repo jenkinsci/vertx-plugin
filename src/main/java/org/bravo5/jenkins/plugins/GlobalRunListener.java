@@ -19,10 +19,37 @@ import java.util.Map;
 public class GlobalRunListener extends RunListener<Run> {
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    // {{{ runToJson
-    private JsonObject runToJson(final Run r) {
+    // {{{ serializeToJson
+    private JsonObject serializeToJson(final Object obj) {
         XStream2 xstream = new XStream2(new JsonHierarchicalStreamDriver());
 
+        /*
+        from: {
+            "some.Class" : {
+                "field1":"value",
+                …
+            }
+        }
+        to: {
+            "@class":"some.Class",
+            "field1":"value",
+            …
+        }
+        */
+
+        JsonObject tmpJson = new JsonObject(xstream.toXML(obj));
+        
+        String className = tmpJson.getFieldNames().iterator().next();
+
+        JsonObject json = tmpJson.getObject(className);
+        json.putString("@class", className);
+
+        return json;
+    }
+    // }}}
+
+    // {{{ runToJson
+    private JsonObject runToJson(final Run r) {
         JsonObject json = new JsonObject()
             .putString("id", r.getId())
             .putNumber("num", r.getNumber())
@@ -30,26 +57,19 @@ public class GlobalRunListener extends RunListener<Run> {
             .putString("url", r.getUrl())
             .putString("fullDisplayName", r.getFullDisplayName())
             .putString("externalizableId", r.getExternalizableId())
-
-            // artifacts aren't serializing in a usable fashion
-            // .putObject("artifacts", new JsonObject(xstream.toXML(r.getArtifacts())))
-
-            // actions
-            // causes
-            // duration
-            .putObject("build", new JsonObject(xstream.toXML(r)))
-            .putObject("nextBuild", new JsonObject(xstream.toXML(r.getNextBuild())))
-            .putObject("previousBuild", new JsonObject(xstream.toXML(r.getPreviousBuild())))
-
+            .putObject("build", serializeToJson(r))
+            .putObject("nextBuild", serializeToJson(r.getNextBuild()))
+            .putObject("previousBuild", serializeToJson(r.getPreviousBuild()))
             .putObject(
                 "parent",
-                new JsonObject(xstream.toXML(r.getParent()))
+                serializeToJson(r.getParent())
                     .putString("name", r.getParent().getName())
                     .putString("fullName", r.getParent().getFullName())
                     .putString("url", r.getParent().getUrl())
             )
         ;
 
+        // build up artifacts by hand
         JsonArray artifactsArr = new JsonArray();
         json.putArray("artifacts", artifactsArr);
 

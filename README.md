@@ -39,43 +39,44 @@ Notifications of Runs.  A Run is serialized like:
             "name":"parameterized",
             "fullName":"parameterized",
             "url":"job/parameterized/"
-            "hudson.model.FreeStyleProject":{ … },
+            "@class":"hudson.model.FreeStyleProject",
+            …
         },
         "build":{
-            "hudson.model.FreeStyleBuild":{
-                "actions":[
-                    {
-                        "parameters":[
-                            {"name":"key","value":"vert.x value"},
-                            {"name":"foo","value":"bar"}
-                        ]
-                    },
-                    {
-                        "causes":[
-                            {"type":"vert.x"}
-                        ]
-                    }
-                ],
-                "number":12,
-                "result":{
-                    "name":"SUCCESS",
-                    "ordinal":0,
-                    "color":"BLUE"
+            "@class":"hudson.model.FreeStyleBuild",
+            "actions":[
+                {
+                    "parameters":[
+                        {"name":"key","value":"vert.x value"},
+                        {"name":"foo","value":"bar"}
+                    ]
                 },
-                "duration":61,
-                "charset":"UTF-8",
-                "keepLog":false,
-                "builtOn":"",
-                "workspace":"…",
-                "hudsonVersion":"1.466",
-                "scm":{"@class":"hudson.scm.NullChangeLogParser"},
-                "culprits":[]
-            }
+                {
+                    "causes":[
+                        {"type":"vert.x"}
+                    ]
+                }
+            ],
+            "number":12,
+            "result":{
+                "name":"SUCCESS",
+                "ordinal":0,
+                "color":"BLUE"
+            },
+            "duration":61,
+            "charset":"UTF-8",
+            "keepLog":false,
+            "builtOn":"",
+            "workspace":"…",
+            "hudsonVersion":"1.466",
+            "scm":{"@class":"hudson.scm.NullChangeLogParser"},
+            "culprits":[]
         },
         "artifacts":[],
         "url":"job/parameterized/12/",
         "previousBuild":{
-            "hudson.model.FreeStyleBuild":{ … }
+            "@class":"hudson.model.FreeStyleBuild",
+            …
         }
     }
 
@@ -90,7 +91,7 @@ Notifications of Runs.  A Run is serialized like:
 #### when a Run is completed
 
     {
-        "action":"started",
+        "action":"completed",
         "run": …
     }
 

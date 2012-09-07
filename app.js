@@ -9,7 +9,12 @@ function hndl2(msg) {
 }
 
 function hndl3(msg) {
-    console.log("jenkins.run -- " + JSON.stringify(msg));
+    // console.log("jenkins.run -- " + JSON.stringify(msg));
+    var r = msg;
+
+    if (r.action === "completed") {
+        console.log(r.run.fullDisplayName + " has " + r.action + "; result: " + r.run.build.result.name);
+    }
 }
 
 var hndl1_id = vertx.eventBus.registerHandler("jenkins-vertx", hndl1);

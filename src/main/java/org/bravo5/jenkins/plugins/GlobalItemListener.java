@@ -18,11 +18,38 @@ import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 public class GlobalItemListener extends ItemListener {
     private final Logger logger = Logger.getLogger(getClass().getName());
     
-    // {{{ itemToJson
-    private JsonObject itemToJson(final Item item) {
+    // {{{ serializeToJson
+    private JsonObject serializeToJson(final Object obj) {
         XStream2 xstream = new XStream2(new JsonHierarchicalStreamDriver());
 
-        JsonObject json = new JsonObject(xstream.toXML(item))
+        /*
+        from: {
+            "some.Class" : {
+                "field1":"value",
+                …
+            }
+        }
+        to: {
+            "@class":"some.Class",
+            "field1":"value",
+            …
+        }
+        */
+
+        JsonObject tmpJson = new JsonObject(xstream.toXML(obj));
+        
+        String className = tmpJson.getFieldNames().iterator().next();
+
+        JsonObject json = tmpJson.getObject(className);
+        json.putString("@class", className);
+
+        return json;
+    }
+    // }}}
+
+    // {{{ itemToJson
+    private JsonObject itemToJson(final Item item) {
+        JsonObject json = serializeToJson(item)
             .putString("name", item.getName())
             .putString("fullName", item.getFullName())
             .putString("url", item.getUrl())
