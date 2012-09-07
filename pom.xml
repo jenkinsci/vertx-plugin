@@ -23,6 +23,12 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
+    <scm>
+        <connection>scm:git:https://github.com/blalor/jenkins-vertx-plugin.git</connection>
+        <developerConnection>scm:git:https://github.com/blalor/jenkins-vertx-plugin.git</developerConnection>
+        <url>https://github.com/blalor/jenkins-vertx-plugin</url>
+    </scm>
+    
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
@@ -42,16 +48,13 @@
             <groupId>org.vert-x</groupId>
             <artifactId>vertx-core</artifactId>
             <version>1.2.3.final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.vert-x</groupId>
-            <artifactId>vertx-platform</artifactId>
-            <version>1.2.3.final</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.0.2</version>
+
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     
@@ -84,4 +87,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <developers>
+        <developer>
+            <id>blalor</id>
+            <name>Brian Lalor</name>
+            <email>blalor@bravo5.org</email>
+            <url>https://github.com/blalor</url>
+        </developer>
+    </developers>
 </project>
