@@ -186,5 +186,16 @@ registered handlers
            }
        }
     }
+
+Response is
+    
+    {"status":"ok"}
+
+or
+    
+    {
+        "status":"error",
+        "message":"failed to schedule"
+    }
  
 All parameters are treated as strings.
