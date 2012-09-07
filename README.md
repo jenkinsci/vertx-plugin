@@ -12,6 +12,20 @@ set the interface to use.  The plugin uses `0.0.0.0:25000` for the cluster host
 and port.  So you just need to make sure the cluster config works for your
 environment and that you don't have conflicting ports.
 
+sample application
+------------------
+
+There's a really quick-and-dirty "application" that will trigger a new build of
+the job named "parameterized", and output a message whenever a job is completed.
+
+Run it like so:
+
+    vertx run app.js -cluster -cluster-host 0.0.0.0 -cluster-port 25001
+
+or maybe even just:
+
+    vertx run app.js -cluster
+
 published messages
 ------------------
 
