@@ -1,7 +1,6 @@
 package org.bravo5.jenkins.plugins;
 
 import hudson.Plugin;
-import jenkins.model.Jenkins;
 
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.json.JsonObject;
@@ -13,7 +12,6 @@ public class PluginImpl extends Plugin {
     private static final ClassLoader CLASS_LOADER = PluginImpl.class.getClassLoader();
 
     private static Vertx vertx;
-    
     private JenkinsEventBusHandler handler;
 
     // {{{ start
@@ -22,7 +20,9 @@ public class PluginImpl extends Plugin {
     public void start() throws Exception {
         logger.info("Vert.x: events for everyone!");
         
-        vertx = Vertx.newVertx(25000, "0.0.0.0"); // @todo make configurable
+        // Hm, this could be made configurable, except that the Vertx instance
+        // can't be destroyed!
+        vertx = Vertx.newVertx(25000, "0.0.0.0");
 
         handler = new JenkinsEventBusHandler(vertx.eventBus());
 
@@ -49,32 +49,20 @@ public class PluginImpl extends Plugin {
      * @param msg the message to publish
      */
     static void ebPublish(final String addr, final JsonObject msg) {
+        if (vertx == null) {
+            throw new IllegalStateException("plugin not started");
+        }
+
         ClassLoader oldContextClassLoader =
             Thread.currentThread().getContextClassLoader();
 
         Thread.currentThread().setContextClassLoader(CLASS_LOADER);
 
         try { 
-            getVertx().eventBus().publish(addr, msg);
+            vertx.eventBus().publish(addr, msg);
         } finally { 
            Thread.currentThread().setContextClassLoader(oldContextClassLoader); 
-        } 
-
-    }
-    // }}}
-
-    // {{{ getInstance
-    /** 
-     * Getter for instance.
-     *
-     * @return value for instance
-     */
-    private static final Vertx getVertx() {
-        if (vertx == null) {
-            throw new IllegalStateException("plugin not started");
         }
-        
-        return vertx;
     }
     // }}}
 }
