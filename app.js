@@ -13,7 +13,7 @@ function hndl3(msg) {
     var r = msg;
 
     if (r.action === "completed") {
-        console.log(r.run.fullDisplayName + " has " + r.action + "; result: " + r.run.build.result.name);
+        console.log(r.run.parent.name + " has " + r.action + "; result: " + r.run.build.result);
     }
 }
 

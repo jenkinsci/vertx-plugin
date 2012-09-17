@@ -7,58 +7,13 @@ import hudson.Extension;
 
 import java.util.logging.Logger;
 
-import java.util.Map;
-
 import org.vertx.java.core.json.JsonObject;
-
-import hudson.util.XStream2;
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
+import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
 
 @Extension
 public class GlobalItemListener extends ItemListener {
     private final Logger logger = Logger.getLogger(getClass().getName());
     
-    // {{{ serializeToJson
-    private JsonObject serializeToJson(final Object obj) {
-        XStream2 xstream = new XStream2(new JsonHierarchicalStreamDriver());
-
-        /*
-        from: {
-            "some.Class" : {
-                "field1":"value",
-                …
-            }
-        }
-        to: {
-            "@class":"some.Class",
-            "field1":"value",
-            …
-        }
-        */
-
-        JsonObject tmpJson = new JsonObject(xstream.toXML(obj));
-        
-        String className = tmpJson.getFieldNames().iterator().next();
-
-        JsonObject json = tmpJson.getObject(className);
-        json.putString("@class", className);
-
-        return json;
-    }
-    // }}}
-
-    // {{{ itemToJson
-    private JsonObject itemToJson(final Item item) {
-        JsonObject json = serializeToJson(item)
-            .putString("name", item.getName())
-            .putString("fullName", item.getFullName())
-            .putString("url", item.getUrl())
-        ;
-
-        return json;
-    }
-    // }}}
-
     // {{{ onLoaded
     /** {@inheritDoc} */
     @Override
@@ -78,7 +33,7 @@ public class GlobalItemListener extends ItemListener {
             "jenkins.item",
             new JsonObject()
                 .putString("action", "created")
-                .putObject("item", itemToJson(item))
+                .putObject("item", serializeToJson(item))
         );
     }
     // }}}
@@ -91,7 +46,7 @@ public class GlobalItemListener extends ItemListener {
             "jenkins.item",
             new JsonObject()
                 .putString("action", "updated")
-                .putObject("item", itemToJson(item))
+                .putObject("item", serializeToJson(item))
         );
     }
     // }}}
@@ -104,8 +59,8 @@ public class GlobalItemListener extends ItemListener {
             "jenkins.item",
             new JsonObject()
                 .putString("action", "copied")
-                .putObject("src", itemToJson(src))
-                .putObject("item", itemToJson(item))
+                .putObject("src", serializeToJson(src))
+                .putObject("item", serializeToJson(item))
         );
     }
     // }}}
@@ -118,7 +73,7 @@ public class GlobalItemListener extends ItemListener {
             "jenkins.item",
             new JsonObject()
                 .putString("action", "renamed")
-                .putObject("item", itemToJson(item))
+                .putObject("item", serializeToJson(item))
                 .putString("oldName", oldName)
                 .putString("newName", newName)
         );
@@ -133,7 +88,7 @@ public class GlobalItemListener extends ItemListener {
             "jenkins.item",
             new JsonObject()
                 .putString("action", "deleted")
-                .putObject("item", itemToJson(item))
+                .putObject("item", serializeToJson(item))
         );
     }
     // }}}

@@ -10,7 +10,7 @@
         <artifactId>plugin</artifactId>
         
         <!-- which version of Jenkins is this plugin built against? -->
-        <version>1.466</version>
+        <version>1.482</version>
     </parent>
     
     <groupId>org.bravo5.jenkins.plugins</groupId>

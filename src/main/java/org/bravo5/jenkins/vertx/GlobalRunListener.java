@@ -1,92 +1,53 @@
 package org.bravo5.jenkins.vertx;
 
+import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
+
 import hudson.model.listeners.RunListener;
 import hudson.model.Run;
+import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.Extension;
+import hudson.Util;
+import jenkins.model.Jenkins;
 
 import java.util.logging.Logger;
 
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
 
-import hudson.util.XStream2;
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
-
-import java.util.Map;
-
 @Extension
 public class GlobalRunListener extends RunListener<Run> {
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    // {{{ serializeToJson
-    private JsonObject serializeToJson(final Object obj) {
-        XStream2 xstream = new XStream2(new JsonHierarchicalStreamDriver());
-
-        /*
-        from: {
-            "some.Class" : {
-                "field1":"value",
-                …
-            }
-        }
-        to: {
-            "@class":"some.Class",
-            "field1":"value",
-            …
-        }
-        */
-
-        JsonObject tmpJson = new JsonObject(xstream.toXML(obj));
-        
-        String className = tmpJson.getFieldNames().iterator().next();
-
-        JsonObject json = tmpJson.getObject(className);
-        json.putString("@class", className);
-
-        return json;
-    }
-    // }}}
-
     // {{{ runToJson
     private JsonObject runToJson(final Run r) {
         JsonObject json = new JsonObject()
-            .putString("id", r.getId())
-            .putNumber("num", r.getNumber())
-            .putNumber("scheduledTimestamp", r.getTimeInMillis())
-            .putString("url", r.getUrl())
-            .putString("fullDisplayName", r.getFullDisplayName())
-            .putString("externalizableId", r.getExternalizableId())
             .putObject("build", serializeToJson(r))
-            .putObject("nextBuild", serializeToJson(r.getNextBuild()))
-            .putObject("previousBuild", serializeToJson(r.getPreviousBuild()))
             .putObject(
                 "parent",
-                serializeToJson(r.getParent())
+                new JsonObject()
                     .putString("name", r.getParent().getName())
                     .putString("fullName", r.getParent().getFullName())
-                    .putString("url", r.getParent().getUrl())
+                    .putString("url", Util.encode(Jenkins.getInstance().getRootUrl() + r.getParent().getUrl()))
             )
         ;
 
-        // build up artifacts by hand
-        JsonArray artifactsArr = new JsonArray();
-        json.putArray("artifacts", artifactsArr);
+        // JsonObject can't handle putObject("foo", null)
+        JsonObject nextBuild = serializeToJson(r.getNextBuild());
+        JsonObject previousBuild = serializeToJson(r.getPreviousBuild());
 
-        if (r.getArtifacts() != null) {
-            for (Object artObj : r.getArtifacts()) {
-                Run.Artifact artifact = (Run.Artifact) artObj;
-
-                artifactsArr.addObject(
-                    new JsonObject()
-                        .putString("displayPath", artifact.getDisplayPath())
-                        .putString("fileName", artifact.getFileName())
-                        // .putNumber("fileSize", artifact.getFileSize())
-                        .putString("href", artifact.getHref())
-                );
-            }
+        if (nextBuild == null) {
+            json.putString("nextBuild", null);
+        } else {
+            json.putObject("nextBuild", nextBuild);
         }
-
+        
+        if (previousBuild == null) {
+            json.putString("previousBuild", null);
+        } else {
+            json.putObject("previousBuild", previousBuild);
+        }
+        
         return json;
     }
     // }}}

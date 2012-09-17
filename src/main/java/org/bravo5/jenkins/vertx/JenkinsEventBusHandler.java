@@ -142,26 +142,30 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
             AbstractProject project =
                 (AbstractProject) jenkins.getItem(json.getString("projectName"));
 
-            Action[] actions = new Action[]{};
+            if (project == null) {
+                sendError(msg, "no such project");
+            } else {
+                Action[] actions = new Action[]{};
 
-            JsonObject params = json.getObject("params");
-            if (params != null) {
-                List<ParameterValue> paramVals = new ArrayList<>();
+                JsonObject params = json.getObject("params");
+                if (params != null) {
+                    List<ParameterValue> paramVals = new ArrayList<>();
 
-                for (String fieldName : params.getFieldNames()) {
-                    paramVals.add(
-                        new StringParameterValue(fieldName,
-                                                 params.getString(fieldName))
-                    );
+                    for (String fieldName : params.getFieldNames()) {
+                        paramVals.add(
+                            new StringParameterValue(fieldName,
+                                                     params.getString(fieldName))
+                        );
+                    }
+
+                    actions = new Action[] { new ParametersAction(paramVals) };
                 }
 
-                actions = new Action[] { new ParametersAction(paramVals) };
-            }
-
-            if (project.scheduleBuild(0, new VertxCause(), actions)) {
-                sendOk(msg);
-            } else {
-                sendError(msg, "failed to schedule");
+                if (project.scheduleBuild(0, new VertxCause(), actions)) {
+                    sendOk(msg);
+                } else {
+                    sendError(msg, "failed to schedule");
+                }
             }
         }
     }
