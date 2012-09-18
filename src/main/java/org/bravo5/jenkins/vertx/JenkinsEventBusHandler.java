@@ -130,6 +130,9 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
                 , "params" : {
                     "param1key": "value"
                     , …
+                },
+                "cause" : {
+                    "baz" : "bap"
                 }
             }
         }
@@ -161,7 +164,7 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
                     actions = new Action[] { new ParametersAction(paramVals) };
                 }
 
-                if (project.scheduleBuild(0, new VertxCause(), actions)) {
+                if (project.scheduleBuild(0, new VertxCause(json.getObject("cause")), actions)) {
                     sendOk(msg);
                 } else {
                     sendError(msg, "failed to schedule");

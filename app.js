@@ -14,6 +14,7 @@ function hndl3(msg) {
 
     if (r.action === "completed") {
         console.log(r.run.parent.name + " has " + r.action + "; result: " + r.run.build.result);
+        console.log("jenkins.run -- " + JSON.stringify(msg));
     }
 }
 
@@ -40,6 +41,9 @@ vertx.eventBus.send(
             "params": {
                 "key":"vert.x value",
                 "foo":"bar"
+            },
+            "cause": {
+                "because": "I said so"
             }
         }
     },

@@ -1,18 +1,39 @@
 package org.bravo5.jenkins.vertx;
 
 import hudson.model.Cause;
+import hudson.model.TaskListener;
+import org.kohsuke.stapler.export.Exported;
+
+import org.vertx.java.core.json.JsonObject;
+import java.util.Map;
 
 public class VertxCause extends Cause {
-    private final String type = "vert.x";
+    private JsonObject payload;
 
-    // {{{ getType
+    // {{{ constructor
+    public VertxCause(final JsonObject payload) {
+        this.payload = payload;
+    }
+    // }}}
+
+    // {{{ getPayload
     /** 
-     * Getter for type.
+     * API-friendly getter for payload.
      *
-     * @return value for type
+     * @return value for payload
      */
-    public String getType() {
-        return type;
+    @Exported(visibility=3)
+    public Map<String,Object> getPayload() {
+        return payload != null ? payload.toMap() : null;
+    }
+    // }}}
+
+    // {{{ getPayloadAsJson
+    /**
+     * Native getter for payload.
+     */
+    public JsonObject getPayloadAsJson() {
+        return payload;
     }
     // }}}
     
@@ -21,6 +42,17 @@ public class VertxCause extends Cause {
     @Override
     public String getShortDescription() {
         return "triggered via vert.x";
+    }
+    // }}}
+
+    // {{{ print
+    /** {@inheritDoc} */
+    @Override
+    public void print(final TaskListener listener) {
+        listener.getLogger().println(String.format(
+            "%s with payload: %s",
+            getShortDescription(), payload.encode()
+        ));
     }
     // }}}
 
@@ -36,7 +68,11 @@ public class VertxCause extends Cause {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return getClass().getName().hashCode();
+        int hash = 41; // 42 - 1, of course
+        hash = 23 * hash + getClass().getName().hashCode();
+        hash = 23 * hash + (payload != null ? payload.hashCode() : 0);
+
+        return hash;
     }
     // }}}
 }
