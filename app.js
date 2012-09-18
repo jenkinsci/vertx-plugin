@@ -38,6 +38,7 @@ vertx.eventBus.send(
         "action": "scheduleBuild",
         "data": {
             "projectName": "parameterized",
+            "quietPeriod": 10,
             "params": {
                 "key":"vert.x value",
                 "foo":"bar"
@@ -48,7 +49,15 @@ vertx.eventBus.send(
         }
     },
     function(r) {
-        console.log(JSON.stringify(r));
+        console.log("build scheduled -- " + JSON.stringify(r));
+        
+        vertx.eventBus.send("jenkins", {"action": "getQueue"}, function(r) {
+            console.log("queue -- " + JSON.stringify(r));
+        });
     }
 );
+
+vertx.eventBus.send("jenkins", {"action": "getAllItems"}, function(r) {
+    console.log("all items -- " + JSON.stringify(r));
+});
 

@@ -7,10 +7,19 @@ import org.kohsuke.stapler.export.Exported;
 import org.vertx.java.core.json.JsonObject;
 import java.util.Map;
 
+/**
+ * Cause attached to a build when invoked by the Vert.x plugin.
+ */
 public class VertxCause extends Cause {
+    /** Arbitrary JSON payload attached to the cause. */
     private JsonObject payload;
 
     // {{{ constructor
+    /**
+     * Constructor.
+     *
+     * @param payload the JSON payload, or null if none
+     */
     public VertxCause(final JsonObject payload) {
         this.payload = payload;
     }

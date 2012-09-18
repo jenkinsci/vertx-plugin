@@ -3,6 +3,7 @@ package org.bravo5.jenkins.vertx;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.Handler;
 
 import java.util.logging.Logger;
@@ -20,7 +21,10 @@ import hudson.model.Action;
 import hudson.model.ParametersAction;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
+import hudson.model.Queue;
+import hudson.model.Item;
 
+import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
 
 public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
     private final Logger logger = Logger.getLogger(getClass().getName());
@@ -60,6 +64,14 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
                         scheduleBuild(msg);
                         break;
 
+                    case "getAllItems":
+                        getAllItems(msg);
+                        break;
+
+                    case "getQueue":
+                        getQueue(msg);
+                        break;
+
                     default:
                         sendError(msg, "unknown action " + action);
                         break;
@@ -70,6 +82,90 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
         }
     }
     // }}}
+    
+    // {{{ scheduleBuild
+    private void scheduleBuild(final Message<JsonObject> msg) {
+        /*
+        {
+            "data" : {
+                "projectName" : "foo",
+                "quietPeriod" : 10
+                // optional
+                , "params" : {
+                    "param1key": "value"
+                    , …
+                },
+                "cause" : {
+                    "baz" : "bap"
+                }
+            }
+        }
+        */
+        JsonObject json = msg.body.getObject("data");
+
+        if (json == null) {
+            sendError(msg, "missing job data");
+        } else {
+            AbstractProject project =
+                (AbstractProject) jenkins.getItem(json.getString("projectName"));
+
+            if (project == null) {
+                sendError(msg, "no such project");
+            } else {
+                Action[] actions = new Action[]{};
+
+                JsonObject params = json.getObject("params");
+                if (params != null) {
+                    List<ParameterValue> paramVals = new ArrayList<>();
+
+                    for (String fieldName : params.getFieldNames()) {
+                        paramVals.add(
+                            new StringParameterValue(fieldName,
+                                                     params.getString(fieldName))
+                        );
+                    }
+
+                    actions = new Action[] { new ParametersAction(paramVals) };
+                }
+                
+                VertxCause cause = new VertxCause(json.getObject("cause"));
+                int quietPeriod = (Integer) json.getNumber("quietPeriod", 0);
+                
+                if (project.scheduleBuild(quietPeriod, cause, actions)) {
+                    sendOk(msg);
+                } else {
+                    sendError(msg, "failed to schedule");
+                }
+            }
+        }
+    }
+    // }}}
+
+    // {{{ getAllItems
+    private void getAllItems(final Message<JsonObject> msg) {
+        JsonArray jsonArr = new JsonArray();
+        
+        for (Item item : jenkins.getItems()) {
+            jsonArr.addObject(serializeToJson(item));
+        }
+        
+        sendOk(msg, new JsonObject().putArray("items", jsonArr));
+    }
+    // }}}
+    
+    // {{{ getQueue
+    private void getQueue(final Message<JsonObject> msg) {
+        JsonArray jsonArr = new JsonArray();
+        
+        for (Queue.Item item : jenkins.getQueue().getItems()) {
+            jsonArr.addObject(serializeToJson(item));
+        }
+        
+        sendOk(msg, new JsonObject().putArray("items", jsonArr));
+    }
+    // }}}
+    
+    // ========================================================== private stuff
 
     // {{{ sendError
     private void sendError(final Message<JsonObject> message, final String error) {
@@ -117,60 +213,6 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
         }
 
         message.reply(resp);
-    }
-    // }}}
-
-    // {{{ scheduleBuild
-    private void scheduleBuild(final Message<JsonObject> msg) {
-        /*
-        {
-            "data" : {
-                "projectName" : "foo"
-                // optional
-                , "params" : {
-                    "param1key": "value"
-                    , …
-                },
-                "cause" : {
-                    "baz" : "bap"
-                }
-            }
-        }
-        */
-        JsonObject json = msg.body.getObject("data");
-
-        if (json == null) {
-            sendError(msg, "missing job data");
-        } else {
-            AbstractProject project =
-                (AbstractProject) jenkins.getItem(json.getString("projectName"));
-
-            if (project == null) {
-                sendError(msg, "no such project");
-            } else {
-                Action[] actions = new Action[]{};
-
-                JsonObject params = json.getObject("params");
-                if (params != null) {
-                    List<ParameterValue> paramVals = new ArrayList<>();
-
-                    for (String fieldName : params.getFieldNames()) {
-                        paramVals.add(
-                            new StringParameterValue(fieldName,
-                                                     params.getString(fieldName))
-                        );
-                    }
-
-                    actions = new Action[] { new ParametersAction(paramVals) };
-                }
-
-                if (project.scheduleBuild(0, new VertxCause(json.getObject("cause")), actions)) {
-                    sendOk(msg);
-                } else {
-                    sendError(msg, "failed to schedule");
-                }
-            }
-        }
     }
     // }}}
 }
