@@ -1,4 +1,4 @@
-package org.bravo5.jenkins.plugins;
+package org.bravo5.jenkins.vertx;
 
 import hudson.model.Cause;
 
