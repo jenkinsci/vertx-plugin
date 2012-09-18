@@ -12,6 +12,8 @@ import org.vertx.java.core.json.JsonObject;
 import hudson.model.Run;
 import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.model.Action;
+import hudson.model.ModelObject;
 
 import java.io.Writer;
 import java.io.StringWriter;
@@ -112,6 +114,12 @@ final class SerializeUtil {
     // {{{ serializeToJson
     public static JsonObject serializeToJson(final Queue.Item queueItem) {
         return new Serializer<Queue.Item>(queueItem).invoke();
+    }
+    // }}}
+    
+    // {{{ serializeToJson
+    public static JsonObject serializeToJson(final Action action) {
+        return new Serializer<Action>(action).invoke();
     }
     // }}}
 }

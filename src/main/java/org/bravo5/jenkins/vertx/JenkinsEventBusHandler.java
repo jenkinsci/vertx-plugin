@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Vector;
 
 import jenkins.model.Jenkins;
 import hudson.model.AbstractProject;
@@ -26,6 +27,9 @@ import hudson.model.Item;
 
 import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
 
+/**
+ * Exposes general Jenkins methods to the EventBus.
+ */
 public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
     private final Logger logger = Logger.getLogger(getClass().getName());
 

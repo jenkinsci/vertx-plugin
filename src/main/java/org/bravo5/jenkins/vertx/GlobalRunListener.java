@@ -15,6 +15,9 @@ import java.util.logging.Logger;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
 
+/**
+ * Broadcasts notifications regarding Runs to the EventBus.
+ */
 @Extension
 public class GlobalRunListener extends RunListener<Run> {
     private final Logger logger = Logger.getLogger(getClass().getName());

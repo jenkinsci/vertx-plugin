@@ -1,19 +1,45 @@
 package org.bravo5.jenkins.vertx;
 
 import hudson.Plugin;
+import jenkins.model.Jenkins;
+import hudson.model.queue.QueueTaskDispatcher;
 
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.logging.Logger;
 
+/**
+ * Entry point into the plugin.  Loaded before all @Extensions.
+ */
 public class PluginImpl extends Plugin {
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    /**
+     * Reference to the ClassLoader for this class.
+     */
     private static final ClassLoader CLASS_LOADER = PluginImpl.class.getClassLoader();
 
-    private static Vertx vertx;
-    private JenkinsEventBusHandler handler;
+    private final Logger logger = Logger.getLogger(getClass().getName());
 
+    /**
+     * A little short-hand.
+     */
+    private final Jenkins jenkins = Jenkins.getInstance();
+    
+    /**
+     * Need just one of these (can't stop it, anyway) for use by other classes.
+     */
+    private static Vertx vertx;
+
+    /**
+     * Main request dispatcher.
+     */
+    private JenkinsEventBusHandler handler;
+    
+    /**
+     * Exposes a QueueTaskDispatcher to the EventBus.
+     */
+    private EventBusQueueTaskDispatcher queueTaskDispatcher;
+    
     // {{{ start
     /** {@inheritDoc} */
     @Override
@@ -26,7 +52,16 @@ public class PluginImpl extends Plugin {
 
         handler = new JenkinsEventBusHandler(vertx.eventBus());
 
-        vertx.eventBus().publish("jenkins-vertx", new JsonObject().putString("action", "started"));
+        // instantiate EventBusQueueTaskDispatcher and add to extension list
+        queueTaskDispatcher = new EventBusQueueTaskDispatcher(vertx.eventBus());
+        jenkins.getExtensionList(QueueTaskDispatcher.class).add(queueTaskDispatcher);
+        
+        // hello, world.
+        vertx.eventBus().publish(
+            "jenkins-vertx",
+            new JsonObject()
+                .putString("action", "started")
+        );
     }
     // }}}
     
@@ -37,7 +72,13 @@ public class PluginImpl extends Plugin {
         logger.info("shutting down");
 
         handler.close();
-        vertx.eventBus().publish("jenkins-vertx", new JsonObject().putString("action", "stopped"));
+        queueTaskDispatcher.close();
+        
+        vertx.eventBus().publish(
+            "jenkins-vertx",
+            new JsonObject()
+                .putString("action", "stopped")
+        );
     }
     // }}}
     
