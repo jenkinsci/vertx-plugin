@@ -56,7 +56,7 @@ function doRegister() {
             "handlerAddress" : queueTaskDispatcherId
         },
         function(r) {
-            console.log("registered queueTaskDispatcher: " + JSON.stringify(r));
+            console.log("registered queueTaskDispatcher: " + JSON.stringify(r, null, '    '));
         }
     );
 }
@@ -71,7 +71,7 @@ function doUnregister() {
             "handlerAddress" : queueTaskDispatcherId
         },
         function(r) {
-            console.log("unregistered queueTaskDispatcher: " + JSON.stringify(r));
+            console.log("unregistered queueTaskDispatcher: " + JSON.stringify(r, null, '    '));
         }
     );
 
@@ -87,7 +87,7 @@ function vertxStop() {
 }
 
 vertx.eventBus.registerHandler("jenkins-vertx", function(msg) {
-    console.log("jenkins-vertx -- " + JSON.stringify(msg));
+    console.log("jenkins-vertx -- " + JSON.stringify(msg, null, '    '));
 
     if (msg.action == "started") {
         doRegister();
@@ -106,7 +106,7 @@ vertx.eventBus.registerHandler("jenkins.run", function(msg) {
 
     if (r.action === "completed") {
         console.log(r.run.parent.name + " has " + r.action + "; result: " + r.run.build.result);
-        console.log("jenkins.run -- " + JSON.stringify(msg));
+        console.log("jenkins.run -- " + JSON.stringify(msg, null, '    '));
     }
 });
 
