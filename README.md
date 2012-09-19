@@ -214,3 +214,49 @@ or
     }
  
 All parameters are treated as strings.
+
+extension points
+----------------
+
+### [QueueTaskDispatcher](http://javadoc.jenkins-ci.org/hudson/model/queue/QueueTaskDispatcher.html)
+
+Allows a queue item to be blocked from building by calling an EventBus handler.
+
+#### register the handler
+
+Send a message to `jenkins.queueTaskDispatcher` with the payload
+
+    {
+        "action": "register",
+        "handlerAddress" : "<address-of-your-handler>"
+    }
+
+A reply will be sent; either
+
+    {"status":"ok"}
+
+or 
+
+    {"status":"error", "message":"reason"}
+
+#### handle events
+
+A message with the action `canRun` will be sent to ask if the queue item can be scheduled to run.
+
+    {
+        "action" : "canRun",
+        "item" : {…}
+    }
+
+A reply is expected in the form of 
+
+    {"canRun":true}
+
+or
+
+    {
+        "canRun": false,
+        "reason": "don't wanna"
+    }
+
+If no reply is received within 5 seconds (*way* too long…) or `canRun` is true, the job will be scheduled (if there is no other reason the job can't be scheduled).
