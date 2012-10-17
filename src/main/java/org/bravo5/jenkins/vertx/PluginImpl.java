@@ -52,16 +52,26 @@ public class PluginImpl extends Plugin {
 
         handler = new JenkinsEventBusHandler(vertx.eventBus());
 
-        // instantiate EventBusQueueTaskDispatcher and add to extension list
-        queueTaskDispatcher = new EventBusQueueTaskDispatcher(vertx.eventBus());
-        jenkins.getExtensionList(QueueTaskDispatcher.class).add(queueTaskDispatcher);
-        
         // hello, world.
         vertx.eventBus().publish(
             "jenkins-vertx",
             new JsonObject()
                 .putString("action", "started")
         );
+    }
+    // }}}
+
+    // {{{ postInitialize
+    /** {@inheritDoc} */
+    @Override
+    public void postInitialize() {
+        // initialize EventBusQueueTaskDispatcher
+        queueTaskDispatcher = jenkins
+            .getExtensionList(QueueTaskDispatcher.class)
+            .get(EventBusQueueTaskDispatcher.class);
+        
+        queueTaskDispatcher.setEventBus(vertx.eventBus());
+        queueTaskDispatcher.init();
     }
     // }}}
     

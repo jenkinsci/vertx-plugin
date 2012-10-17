@@ -1,7 +1,9 @@
 package org.bravo5.jenkins.vertx;
 
-import jenkins.model.Jenkins;
+import hudson.Extension;
 import hudson.model.queue.QueueTaskDispatcher;
+
+import jenkins.model.Jenkins;
 import hudson.model.queue.CauseOfBlockage;
 import hudson.model.Queue;
 import hudson.model.Action;
@@ -25,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * QueueTaskDispatcher that gets exposed to the EventBus.
  */
+@Extension
 public class EventBusQueueTaskDispatcher
     extends QueueTaskDispatcher
     implements Handler<Message<JsonObject>>
@@ -49,10 +52,19 @@ public class EventBusQueueTaskDispatcher
      */
     private final Jenkins jenkins = Jenkins.getInstance();
 
-    // {{{ constructor
-    /* package */ EventBusQueueTaskDispatcher(final EventBus eventBus) {
+    // {{{ setEventBus
+    /** 
+     * Setter for eventBus.
+     *
+     * @param eventBus new value for eventBus
+     */
+    public void setEventBus(final EventBus eventBus) {
         this.eventBus = eventBus;
-        
+    }
+    // }}}
+    
+    // {{{ init
+    public void init() {
         handlerId = eventBus.registerHandler("jenkins.queueTaskDispatcher", this);
     }
     // }}}
