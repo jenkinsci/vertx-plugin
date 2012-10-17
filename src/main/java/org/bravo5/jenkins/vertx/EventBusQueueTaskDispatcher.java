@@ -121,12 +121,15 @@ public class EventBusQueueTaskDispatcher
         if (handlerAddr == null) {
             sendError(msg, "missing handlerAddress");
         } else {
-            if (registeredHandlerId == null) {
-                registeredHandlerId = handlerAddr;
-                sendOk(msg);
-            } else {
-                sendError(msg, "handler is already registered");
+            if (registeredHandlerId != null) {
+                logger.severe(String.format(
+                    "replacing existing handler %s with %s",
+                    registeredHandlerId, handlerAddr
+                ));
             }
+
+            registeredHandlerId = handlerAddr;
+            sendOk(msg);
         }
     }
     // }}}
