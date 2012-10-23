@@ -76,11 +76,14 @@ final class SerializeUtil {
                     
                     Model<T> model = (Model<T>) new ModelBuilder().get(object.getClass());
                     model.writeTo(object, pruner, dataWriter);
-                } catch (IOException e) {
-                    throw new RuntimeException("error serializing", e);
+                    
+                    retVal = new JsonObject(writer.toString());
+                } catch (Exception e) {
+                    retVal = new JsonObject()
+                        .putString("error", "could not serialize to JSON")
+                        .putString("message", e.getMessage())
+                        .putString("class", object.getClass().getName());
                 }
-                
-                retVal = new JsonObject(writer.toString());
             }
 
             return retVal;
