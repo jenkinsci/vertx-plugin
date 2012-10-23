@@ -37,9 +37,22 @@
     </repositories>
     
     <pluginRepositories>
+        <!--
+            Total fucking kludge for 
+                https://wiki.jenkins-ci.org/display/JENKINS/Plugin+tutorial
+                https://issues.jenkins-ci.org/browse/JENKINS-13637
+        -->
         <pluginRepository>
-            <id>repo.jenkins-ci.org</id>
+            <id>central</id>
             <url>http://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>real-central</id>
+            <name>Central Repository</name>
+            <url>http://repo.maven.apache.org/maven2</url>
         </pluginRepository>
     </pluginRepositories>
     
