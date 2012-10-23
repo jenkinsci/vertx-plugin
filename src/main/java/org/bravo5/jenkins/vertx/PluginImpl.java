@@ -55,8 +55,7 @@ public class PluginImpl extends Plugin {
         // hello, world.
         vertx.eventBus().publish(
             "jenkins-vertx",
-            new JsonObject()
-                .putString("action", "started")
+            buildAction("started")
         );
     }
     // }}}
@@ -86,8 +85,7 @@ public class PluginImpl extends Plugin {
         
         vertx.eventBus().publish(
             "jenkins-vertx",
-            new JsonObject()
-                .putString("action", "stopped")
+            buildAction("stopped")
         );
     }
     // }}}
@@ -114,6 +112,16 @@ public class PluginImpl extends Plugin {
         } finally { 
            Thread.currentThread().setContextClassLoader(oldContextClassLoader); 
         }
+    }
+    // }}}
+    
+    // {{{ buildAction
+    private JsonObject buildAction(final String action) {
+        return new JsonObject()
+            .putString("action", action)
+            // Mailer isn't initialized, yet; throws NPE
+            // .putString("jenkins_url", jenkins.getRootUrl())
+        ;
     }
     // }}}
 }
