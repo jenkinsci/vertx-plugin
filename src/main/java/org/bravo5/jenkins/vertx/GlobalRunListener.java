@@ -59,10 +59,6 @@ public class GlobalRunListener extends RunListener<Run> {
     /** {@inheritDoc} */
     @Override
     public void onStarted(final Run r, final TaskListener listener) {
-        listener.getLogger().println(String.format(
-            "in onStarted(%s, …)", r
-        ));
-
         PluginImpl.ebPublish(
             "jenkins.run",
             new JsonObject()
@@ -76,10 +72,6 @@ public class GlobalRunListener extends RunListener<Run> {
     /** {@inheritDoc} */
     @Override
     public void onCompleted(final Run r, final TaskListener listener) {
-        listener.getLogger().println(String.format(
-            "in onCompleted(%s, …)", r
-        ));
-
         PluginImpl.ebPublish(
             "jenkins.run",
             new JsonObject()
