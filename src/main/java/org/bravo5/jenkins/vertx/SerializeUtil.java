@@ -8,7 +8,6 @@ import org.kohsuke.stapler.export.Model;
 import org.kohsuke.stapler.export.DataWriter;
 
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.json.JsonArray;
 
 import hudson.model.Run;
 import hudson.model.Item;
@@ -99,19 +98,7 @@ final class SerializeUtil {
      * @return JsonObject representation
      */
     public static JsonObject serializeToJson(final Run run) {
-        JsonObject runJson = new Serializer<Run>(run).invoke();
-        
-        if (runJson != null) {
-            // gonna roll our own actions, so dump the ones that were created
-            runJson.removeField("actions");
-            
-            runJson.putArray("actions", new JsonArray());
-            for (Action action : run.getActions()) { // may be empty, but never null
-                runJson.getArray("actions").add(serializeToJson(action));
-            }
-        }
-        
-        return runJson;
+        return new Serializer<Run>(run).invoke();
     }
     // }}}
 
@@ -135,10 +122,7 @@ final class SerializeUtil {
     
     // {{{ serializeToJson
     public static JsonObject serializeToJson(final Action action) {
-        JsonObject actionJson = new Serializer<Action>(action).invoke();
-        actionJson.putString("displayName", action.getDisplayName());
-        
-        return actionJson;
+        return new Serializer<Action>(action).invoke();
     }
     // }}}
 }
