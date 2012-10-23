@@ -93,6 +93,8 @@
                 <version>2.12</version>
 
                 <configuration>
+                    <!-- because Vert.x can't be shut down -->
+                    <forkMode>always</forkMode>
                     <systemPropertyVariables>
                         <log4j.configuration>file://${project.build.directory}/test-classes/log4j.properties</log4j.configuration>
                     </systemPropertyVariables>
