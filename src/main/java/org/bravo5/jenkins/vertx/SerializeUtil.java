@@ -1,5 +1,8 @@
 package org.bravo5.jenkins.vertx;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.kohsuke.stapler.export.ExportConfig;
 import org.kohsuke.stapler.export.TreePruner;
 import org.kohsuke.stapler.export.ModelBuilder;
@@ -13,17 +16,17 @@ import hudson.model.Run;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.Action;
-import hudson.model.ModelObject;
 
 import java.io.Writer;
 import java.io.StringWriter;
-import java.io.IOException;
 
 /**
  * Utility class for serializing Jenkins objects using the same method as the
  * remote API.
  */
 final class SerializeUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SerializeUtil.class);
+
     /**
      * Utility classes don't get constructors.
      */
@@ -85,6 +88,11 @@ final class SerializeUtil {
                         .putString("error", "could not serialize to JSON")
                         .putString("message", e.getMessage())
                         .putString("class", object.getClass().getName());
+
+                    LOGGER.error(
+                        "could not serialize {} to JSON",
+                        object.getClass().getName(), e
+                    );
                 }
             }
 
