@@ -5,7 +5,8 @@ import hudson.model.Item;
 
 import hudson.Extension;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.vertx.java.core.json.JsonObject;
 import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
@@ -15,7 +16,7 @@ import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
  */
 @Extension
 public class GlobalItemListener extends ItemListener {
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     // {{{ onLoaded
     /** {@inheritDoc} */

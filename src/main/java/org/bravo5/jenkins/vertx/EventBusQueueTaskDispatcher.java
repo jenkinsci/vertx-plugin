@@ -9,8 +9,8 @@ import hudson.model.Queue;
 import hudson.model.Action;
 import hudson.Util;
 
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
@@ -32,7 +32,7 @@ public class EventBusQueueTaskDispatcher
     extends QueueTaskDispatcher
     implements Handler<Message<JsonObject>>
 {
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     private EventBus eventBus;
 
@@ -122,10 +122,10 @@ public class EventBusQueueTaskDispatcher
             sendError(msg, "missing handlerAddress");
         } else {
             if (registeredHandlerId != null) {
-                logger.severe(String.format(
-                    "replacing existing handler %s with %s",
+                logger.warn(
+                    "replacing existing handler {} with {}",
                     registeredHandlerId, handlerAddr
-                ));
+                );
             }
 
             registeredHandlerId = handlerAddr;
@@ -167,7 +167,7 @@ public class EventBusQueueTaskDispatcher
         CauseOfBlockage cause = null;
         
         if (registeredHandlerId == null) {
-            logger.info("no handler registered");
+            logger.debug("no handler registered");
         } else {
             // invoke EventBus#send() in a thread and use a BlockingQueue to
             // retrieve the reply.  This appears to be the only way to work with
@@ -256,7 +256,7 @@ public class EventBusQueueTaskDispatcher
                             }
                         );
                     } catch (Exception e) {
-                        logger.log(Level.SEVERE, "unable to send message", e);
+                        logger.error("unable to send message", e);
                         replyQueue.add(new JsonObject().putString("error", "got exception"));
                     }
                 }
@@ -269,7 +269,7 @@ public class EventBusQueueTaskDispatcher
                 final JsonObject reply = replyQueue.poll(10, TimeUnit.SECONDS);
                 
                 if (reply == null) {
-                    logger.warning("timeout waiting for reply from " + registeredHandlerId);
+                    logger.warn("timeout waiting for reply from {}", registeredHandlerId);
                 } else {
                     if (! reply.getBoolean("canRun", true)) {
                         cause = new CauseOfBlockage() {
@@ -281,7 +281,7 @@ public class EventBusQueueTaskDispatcher
                     }
                 }
             } catch (InterruptedException e) {
-                logger.warning("interrupted waiting for reply");
+                logger.warn("interrupted waiting for reply");
             }
         }
         
@@ -302,7 +302,7 @@ public class EventBusQueueTaskDispatcher
                            final String error,
                            final Exception e)
     {
-        logger.log(Level.SEVERE, error, e); // RAAAAAAGE
+        logger.error(error, e);
         
         JsonObject json = new JsonObject()
             .putString("status", "error")

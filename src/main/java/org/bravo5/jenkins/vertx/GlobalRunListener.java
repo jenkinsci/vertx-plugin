@@ -10,7 +10,8 @@ import hudson.Extension;
 import hudson.Util;
 import jenkins.model.Jenkins;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
@@ -20,7 +21,7 @@ import org.vertx.java.core.json.JsonArray;
  */
 @Extension
 public class GlobalRunListener extends RunListener<Run> {
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     // {{{ runToJson
     private JsonObject runToJson(final Run r) {

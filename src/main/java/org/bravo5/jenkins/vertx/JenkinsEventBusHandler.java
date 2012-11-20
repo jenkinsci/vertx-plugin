@@ -6,8 +6,8 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.Handler;
 
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,7 +31,7 @@ import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
  * Exposes general Jenkins methods to the EventBus.
  */
 public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Jenkins jenkins = Jenkins.getInstance();
     private Collection<String> registeredHandlerIds = new HashSet<>();
@@ -182,7 +182,7 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
                            final String error,
                            final Exception e)
     {
-        logger.log(Level.SEVERE, error, e); // RAAAAAAGE
+        logger.error(error, e);
         
         JsonObject json = new JsonObject()
             .putString("status", "error")

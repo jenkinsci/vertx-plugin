@@ -7,7 +7,8 @@ import hudson.model.queue.QueueTaskDispatcher;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Entry point into the plugin.  Loaded before all @Extensions.
@@ -18,7 +19,7 @@ public class PluginImpl extends Plugin {
      */
     private static final ClassLoader CLASS_LOADER = PluginImpl.class.getClassLoader();
 
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * A little short-hand.
