@@ -78,6 +78,9 @@ final class SerializeUtil {
                     
                     retVal = new JsonObject(writer.toString());
                 } catch (Exception e) {
+                    // Catching Exception is only allowed in very limited
+                    // circumstances.  This is one of them.  Regardless of the
+                    // error, we want the caller to know about it.
                     retVal = new JsonObject()
                         .putString("error", "could not serialize to JSON")
                         .putString("message", e.getMessage())

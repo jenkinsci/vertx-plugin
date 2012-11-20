@@ -98,6 +98,9 @@ public class EventBusQueueTaskDispatcher
                         break;
                 }
             } catch (Exception e) {
+                // Catching Exception is only allowed in very limited
+                // circumstances.  This is one of them.  Regardless of the
+                // error, we want the caller to know about it.
                 sendError(msg, "error invoking " + action + ": " + e.getMessage(), e);
             }
         }
