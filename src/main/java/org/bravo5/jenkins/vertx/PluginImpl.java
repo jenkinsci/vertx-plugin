@@ -83,6 +83,13 @@ public class PluginImpl extends Plugin {
     public void stop() {
         logger.info("shutting down");
 
+        if (vertx != null) {
+            vertx.eventBus().publish(
+                "jenkins-vertx",
+                buildAction("stopped")
+            );
+        }        
+
         if (handler != null) {
             handler.close();
         }
@@ -90,13 +97,6 @@ public class PluginImpl extends Plugin {
         if (queueTaskDispatcher != null) {
             queueTaskDispatcher.close();
         }
-
-        if (vertx != null) {
-            vertx.eventBus().publish(
-                "jenkins-vertx",
-                buildAction("stopped")
-            );
-        }        
     }
     // }}}
     
