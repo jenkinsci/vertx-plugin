@@ -209,4 +209,58 @@ public class EventBusQueueTaskDispatcherTest {
         assertNull(cause);
     }
     // }}}
+
+    // {{{ handlesTimeoutInCallbackGracefully
+    /**
+     * If a registered handler takes longer than the pre-determined time, we
+     * should abort and return null, allowing the queued item to proceed.
+     */
+    @Test
+    public void handlesTimeoutInCallbackGracefully() {
+        registersSingleHandler();
+
+        reset(mockEventBus);
+
+        // reduce the timeout to something short for the tests
+        dispatcher.setTimeoutMillis(30);
+        
+        Queue.Task mockQueueTask =
+            EasyMock.createNiceMock("task", Queue.Task.class);
+
+        Queue.WaitingItem queueItem = new Queue.WaitingItem(
+            Calendar.getInstance(),
+            mockQueueTask,
+            Collections.<Action>emptyList()
+        );
+
+        mockEventBus.send(
+            eq("someAddr"),
+            isA(JsonObject.class),
+            isA(Handler.class)
+        );
+
+        // instead of returning a response, just sleep for just longer than the
+        // configured timeout
+        expectLastCall()
+            .andAnswer(new IAnswer<Void>() {
+                public Void answer() {
+                    try {
+                        Thread.sleep(60);
+                    } catch (InterruptedException e) {
+                        fail("interrupted sleep");
+                    }
+
+                    return null; // le sigh
+                }
+            });
+
+        replay(mockQueueTask, mockEventBus);
+
+        CauseOfBlockage cause = dispatcher.canRun(queueItem);
+
+        verify(mockQueueTask, mockEventBus);
+
+        assertNull(cause);
+    }
+    // }}}
 }

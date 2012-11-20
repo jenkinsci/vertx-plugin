@@ -38,6 +38,7 @@ public class EventBusQueueTaskDispatcher
 
     private EventBus eventBus;
     private Jenkins jenkins;
+    private int timeoutMillis = 5000;
 
     /**
      * Address of EventBus handler that has registered for QueueTaskDispatcher 
@@ -64,6 +65,17 @@ public class EventBusQueueTaskDispatcher
      */
     public void setEventBus(final EventBus eventBus) {
         this.eventBus = eventBus;
+    }
+    // }}}
+
+    // {{{ setTimeoutMillis
+    /** 
+     * Setter for timeoutMillis.
+     *
+     * @param timeoutMillis new value for timeoutMillis
+     */
+    public void setTimeoutMillis(final int timeoutMillis) {
+        this.timeoutMillis = timeoutMillis;
     }
     // }}}
     
@@ -193,6 +205,9 @@ public class EventBusQueueTaskDispatcher
                             }
                         );
                     } catch (Exception e) {
+                        // no exceptions are declared to be thrown, but this 
+                        // ensures an orderly communication between this thread
+                        // and the caller.
                         logger.error("unable to send message", e);
                         replyQueue.add(new JsonObject().putString("error", "got exception"));
                     }
@@ -203,7 +218,8 @@ public class EventBusQueueTaskDispatcher
             t.start();
 
             try {
-                final JsonObject reply = replyQueue.poll(10, TimeUnit.SECONDS);
+                final JsonObject reply =
+                    replyQueue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
                 
                 if (reply == null) {
                     logger.error("timeout waiting for reply from {}", registeredHandlerId);
