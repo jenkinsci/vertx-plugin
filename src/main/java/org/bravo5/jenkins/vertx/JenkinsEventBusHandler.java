@@ -10,10 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Vector;
 
 import jenkins.model.Jenkins;
 import hudson.model.AbstractProject;
@@ -34,7 +34,7 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Jenkins jenkins = Jenkins.getInstance();
-    private Collection<String> registeredHandlerIds = new HashSet<>();
+    private Map<String,Handler> registeredHandlers = new HashMap<>();
 
     private EventBus eventBus;
 
@@ -42,14 +42,15 @@ public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
     public JenkinsEventBusHandler(final EventBus eventBus) {
         this.eventBus = eventBus;
 
-        registeredHandlerIds.add(eventBus.registerHandler("jenkins", this));
+        eventBus.registerHandler("jenkins", this);
+        registeredHandlers.put("jenkins", this);
     }
     // }}}
 
     // {{{ close
     public void close() {
-        for (String handlerId : registeredHandlerIds) {
-            eventBus.unregisterHandler(handlerId);
+        for (String addr : registeredHandlers.keySet()) {
+            eventBus.unregisterHandler(addr, registeredHandlers.remove(addr));
         }
     }
     // }}}

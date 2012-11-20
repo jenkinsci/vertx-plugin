@@ -47,7 +47,8 @@ function queueTaskDispatcherHandler(msg, replier) {
 function doRegister() {
     console.log("registering handlers");
 
-    registeredHandlers.push([vertx.eventBus.registerHandler(queueTaskDispatcherId, queueTaskDispatcherHandler), queueTaskDispatcherHandler]);
+    vertx.eventBus.registerHandler(queueTaskDispatcherId, queueTaskDispatcherHandler);
+    registeredHandlers.push([queueTaskDispatcherId, queueTaskDispatcherHandler]);
 
     vertx.eventBus.send(
         "jenkins.queueTaskDispatcher",

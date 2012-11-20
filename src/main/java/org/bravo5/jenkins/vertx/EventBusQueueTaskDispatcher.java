@@ -34,12 +34,9 @@ public class EventBusQueueTaskDispatcher
 {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    private EventBus eventBus;
+    private static final String QTD_ADDR = "jenkins.queueTaskDispatcher";
 
-    /**
-     * Handler ID for our listener.
-     */
-    private String handlerId;
+    private EventBus eventBus;
 
     /**
      * Address of EventBus handler that has registered for QueueTaskDispatcher 
@@ -65,7 +62,7 @@ public class EventBusQueueTaskDispatcher
     
     // {{{ init
     public void init() {
-        handlerId = eventBus.registerHandler("jenkins.queueTaskDispatcher", this);
+        eventBus.registerHandler(QTD_ADDR, this);
     }
     // }}}
     
@@ -74,7 +71,7 @@ public class EventBusQueueTaskDispatcher
      * Called by {@link PluginImpl} to shut us down.
      */
     public void close() {
-        eventBus.unregisterHandler(handlerId);
+        eventBus.unregisterHandler(QTD_ADDR, this);
     }
     // }}}
     
