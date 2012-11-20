@@ -136,6 +136,51 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>disable-jenkins-meddling</id>
+            <activation>
+                <!-- set to true to save your sanity -->
+                <activeByDefault>false</activeByDefault>
+            </activation>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jenkins-ci.tools</groupId>
+                        <artifactId>maven-hpi-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-test-hpl</id>
+                                <phase>none</phase>
+                            </execution>
+                            
+                            <execution>
+                                <id>default-resolve-test-dependencies</id>
+                                <phase>none</phase>
+                            </execution>
+                            
+                            <execution>
+                                <id>default-hpi</id>
+                                <phase>none</phase>
+                            </execution>
+                            
+                            <execution>
+                                <id>default-insert-test</id>
+                                <phase>none</phase>
+                            </execution>
+
+                            <execution>
+                                <id>default-validate</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <developers>
         <developer>
             <id>blalor</id>
