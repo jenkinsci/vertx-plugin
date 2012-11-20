@@ -3,6 +3,7 @@ package org.bravo5.jenkins.vertx;
 import static org.junit.Assert.fail;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
@@ -181,8 +182,31 @@ public class EventBusQueueTaskDispatcherTest {
 
         assertNotNull(cause);
         assertEquals("reason not specified", cause.getShortDescription());
+    }
+    // }}}
 
-        logger.info("{}", payloadCap.getValue());
+    // {{{ canRunWithoutHandlerReturnsNull
+    /**
+     * Sane default behavior when no handler is registered.
+     */
+    @Test
+    public void canRunWithoutHandlerReturnsNull() {
+        Queue.Task mockQueueTask =
+            EasyMock.createMock("task", Queue.Task.class);
+
+        Queue.WaitingItem queueItem = new Queue.WaitingItem(
+            Calendar.getInstance(),
+            mockQueueTask,
+            Collections.<Action>emptyList()
+        );
+
+        replay(mockQueueTask, mockEventBus);
+
+        CauseOfBlockage cause = dispatcher.canRun(queueItem);
+
+        verify(mockQueueTask, mockEventBus);
+
+        assertNull(cause);
     }
     // }}}
 }
