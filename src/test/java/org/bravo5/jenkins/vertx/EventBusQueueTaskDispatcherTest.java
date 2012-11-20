@@ -43,6 +43,8 @@ import org.vertx.java.core.json.JsonObject;
 public class EventBusQueueTaskDispatcherTest {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private static final String HANDLER_CALLBACK_ID = "someAddr";
+
     private EventBusQueueTaskDispatcher dispatcher;
     
     private EventBus mockEventBus;
@@ -103,6 +105,51 @@ public class EventBusQueueTaskDispatcherTest {
     }
     // }}}
 
+    // {{{ unknownActionReturnsError
+    @Test
+    public void unknownActionReturnsError() {
+        final Message<JsonObject> msg = EasyMock.createMock(Message.class);
+        Capture<JsonObject> replyCap = new Capture<>();
+
+        msg.body = new JsonObject()
+            .putString("action", "someInvalidAction")
+            .putString("foo", "bar");
+
+        msg.reply(capture(replyCap));
+
+        replay(msg, mockEventBus);
+
+        // invoke the handler
+        dispatcher.handle(msg);
+
+        verify(msg, mockEventBus);
+
+        checkError(replyCap, "unknown action someInvalidAction");
+    }
+    // }}}
+
+    // {{{ missingActionReturnsError
+    @Test
+    public void missingActionReturnsError() {
+        final Message<JsonObject> msg = EasyMock.createMock(Message.class);
+        Capture<JsonObject> replyCap = new Capture<>();
+
+        msg.body = new JsonObject()
+            .putString("foo", "bar");
+
+        msg.reply(capture(replyCap));
+
+        replay(msg, mockEventBus);
+
+        // invoke the handler
+        dispatcher.handle(msg);
+
+        verify(msg, mockEventBus);
+
+        checkError(replyCap, "no action provided");
+    }
+    // }}}
+
     // {{{ registersSingleHandler
     /**
      * Register a single handler, verify the reply message.
@@ -114,7 +161,7 @@ public class EventBusQueueTaskDispatcherTest {
 
         msg.body = new JsonObject()
             .putString("action", "register")
-            .putString("handlerAddress", "someAddr");
+            .putString("handlerAddress", HANDLER_CALLBACK_ID);
 
         msg.reply(capture(replyCap));
 
@@ -125,9 +172,61 @@ public class EventBusQueueTaskDispatcherTest {
 
         verify(msg, mockEventBus);
 
-        assertTrue(replyCap.hasCaptured());
+        checkOk(replyCap);
+    }
+    // }}}
 
-        assertEquals("ok", replyCap.getValue().getString("status"));
+    // {{{ unregistersPreviouslyRegisteredHandler
+    @Test
+    public void unregistersPreviouslyRegisteredHandler() {
+        registersSingleHandler();
+
+        reset(mockEventBus);
+
+        final Message<JsonObject> msg = EasyMock.createMock(Message.class);
+        Capture<JsonObject> replyCap = new Capture<>();
+
+        // the unregister message
+        msg.body = new JsonObject()
+            .putString("action", "unregister")
+            .putString("handlerAddress", HANDLER_CALLBACK_ID);
+
+        // prepare to capture the reply
+        msg.reply(capture(replyCap));
+
+        replay(msg, mockEventBus);
+
+        // invoke the handler
+        dispatcher.handle(msg);
+
+        verify(msg, mockEventBus);
+
+        checkOk(replyCap);
+    }
+    // }}}
+
+    // {{{ handlesUnregisteringIncorrectHandlerId
+    @Test
+    public void handlesUnregisteringIncorrectHandlerId() {
+        final Message<JsonObject> msg = EasyMock.createMock(Message.class);
+        Capture<JsonObject> replyCap = new Capture<>();
+
+        // the unregister message
+        msg.body = new JsonObject()
+            .putString("action", "unregister")
+            .putString("handlerAddress", "someInvalidAddr");
+
+        // prepare to capture the reply
+        msg.reply(capture(replyCap));
+
+        replay(msg, mockEventBus);
+
+        // invoke the handler
+        dispatcher.handle(msg);
+
+        verify(msg, mockEventBus);
+
+        checkError(replyCap, "handler ID mismatch");
     }
     // }}}
 
@@ -153,7 +252,7 @@ public class EventBusQueueTaskDispatcherTest {
         Capture<JsonObject> payloadCap = new Capture<>();
 
         mockEventBus.send(
-            eq("someAddr"),
+            eq(HANDLER_CALLBACK_ID),
             capture(payloadCap),
             isA(Handler.class)
         );
@@ -166,7 +265,9 @@ public class EventBusQueueTaskDispatcherTest {
                         (Handler<Message<JsonObject>>) getCurrentArguments()[2];
 
                     Message<JsonObject> resultMsg = EasyMock.createMock(Message.class);
-                    resultMsg.body = new JsonObject().putBoolean("canRun", false);
+                    resultMsg.body = new JsonObject()
+                        .putBoolean("canRun", false)
+                        .putString("reason", "'cause we said so");
 
                     handler.handle(resultMsg);
 
@@ -181,7 +282,57 @@ public class EventBusQueueTaskDispatcherTest {
         verify(mockQueueTask, mockEventBus);
 
         assertNotNull(cause);
-        assertEquals("reason not specified", cause.getShortDescription());
+        assertEquals("'cause we said so", cause.getShortDescription());
+    }
+    // }}}
+
+    // {{{ explicitPositiveCanRunWorks
+    @Test
+    public void explicitPositiveCanRunWorks() {
+        registersSingleHandler();
+
+        reset(mockEventBus);
+
+        Queue.Task mockQueueTask =
+            EasyMock.createNiceMock("task", Queue.Task.class);
+
+        Queue.WaitingItem queueItem = new Queue.WaitingItem(
+            Calendar.getInstance(),
+            mockQueueTask,
+            Collections.<Action>emptyList()
+        );
+
+        Capture<JsonObject> payloadCap = new Capture<>();
+
+        mockEventBus.send(
+            eq(HANDLER_CALLBACK_ID),
+            capture(payloadCap),
+            isA(Handler.class)
+        );
+
+        // invoke the handler passed to send()
+        expectLastCall()
+            .andAnswer(new IAnswer<Void>() {
+                public Void answer() {
+                    Handler<Message<JsonObject>> handler =
+                        (Handler<Message<JsonObject>>) getCurrentArguments()[2];
+
+                    Message<JsonObject> resultMsg = EasyMock.createMock(Message.class);
+                    resultMsg.body = new JsonObject().putBoolean("canRun", true);
+
+                    handler.handle(resultMsg);
+
+                    return null; // le sigh
+                }
+            });
+
+        replay(mockQueueTask, mockEventBus);
+
+        CauseOfBlockage cause = dispatcher.canRun(queueItem);
+
+        verify(mockQueueTask, mockEventBus);
+
+        assertNull(cause);
     }
     // }}}
 
@@ -223,7 +374,7 @@ public class EventBusQueueTaskDispatcherTest {
 
         // reduce the timeout to something short for the tests
         dispatcher.setTimeoutMillis(30);
-        
+
         Queue.Task mockQueueTask =
             EasyMock.createNiceMock("task", Queue.Task.class);
 
@@ -234,7 +385,7 @@ public class EventBusQueueTaskDispatcherTest {
         );
 
         mockEventBus.send(
-            eq("someAddr"),
+            eq(HANDLER_CALLBACK_ID),
             isA(JsonObject.class),
             isA(Handler.class)
         );
@@ -261,6 +412,23 @@ public class EventBusQueueTaskDispatcherTest {
         verify(mockQueueTask, mockEventBus);
 
         assertNull(cause);
+    }
+    // }}}
+
+    // {{{ checkOk
+    private void checkOk(final Capture<JsonObject> cap) {
+        assertTrue(cap.hasCaptured());
+        
+        assertEquals("ok", cap.getValue().getString("status"));
+    }
+    // }}}
+
+    // {{{ checkError
+    private void checkError(final Capture<JsonObject> cap, final String msg) {
+        assertTrue(cap.hasCaptured());
+
+        assertEquals("error", cap.getValue().getString("status"));
+        assertEquals(msg, cap.getValue().getString("message"));
     }
     // }}}
 }
