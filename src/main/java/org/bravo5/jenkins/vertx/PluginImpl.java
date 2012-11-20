@@ -48,7 +48,8 @@ public class PluginImpl extends Plugin {
         logger.info("Vert.x: events for everyone!");
         
         // Hm, this could be made configurable, except that the Vertx instance
-        // can't be destroyed!
+        // can't be destroyed!  Maybe someday…
+        // https://github.com/vert-x/vert.x/issues/355
         vertx = Vertx.newVertx(25000, "0.0.0.0");
 
         handler = new JenkinsEventBusHandler(vertx.eventBus());
