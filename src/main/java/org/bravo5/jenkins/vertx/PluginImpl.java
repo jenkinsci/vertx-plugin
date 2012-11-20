@@ -71,6 +71,7 @@ public class PluginImpl extends Plugin {
             .getExtensionList(QueueTaskDispatcher.class)
             .get(EventBusQueueTaskDispatcher.class);
         
+        queueTaskDispatcher.setJenkins(jenkins);
         queueTaskDispatcher.setEventBus(vertx.eventBus());
         queueTaskDispatcher.init();
     }

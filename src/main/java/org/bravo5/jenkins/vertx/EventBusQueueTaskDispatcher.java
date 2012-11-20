@@ -37,6 +37,7 @@ public class EventBusQueueTaskDispatcher
     private static final String QTD_ADDR = "jenkins.queueTaskDispatcher";
 
     private EventBus eventBus;
+    private Jenkins jenkins;
 
     /**
      * Address of EventBus handler that has registered for QueueTaskDispatcher 
@@ -44,11 +45,17 @@ public class EventBusQueueTaskDispatcher
      */
     private String registeredHandlerId;
     
-    /**
-     * A little short-hand.
+    // {{{ setJenkins
+    /** 
+     * Setter for jenkins.
+     *
+     * @param jenkins new value for jenkins
      */
-    private final Jenkins jenkins = Jenkins.getInstance();
-
+    public void setJenkins(final Jenkins jenkins) {
+        this.jenkins = jenkins;
+    }
+    // }}}
+    
     // {{{ setEventBus
     /** 
      * Setter for eventBus.
@@ -178,77 +185,7 @@ public class EventBusQueueTaskDispatcher
             Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        // can't use serializeToJson() here; that'll cause an
-                        // infinite loop!  I think it's due to "why".
-
-                        /*
-                        {
-                            "action":"canRun",
-                            "item":{
-                                "actions":[
-                                    {
-                                        "causes":[{"shortDescription":"Started by user anonymous","userId":null,"userName":"anonymous"}]}
-                                ],
-                                "blocked":false,
-                                "buildable":true,
-                                "id":5,
-                                "inQueueSince":1348006835051,
-                                "params":"",
-                                "stuck":false,
-                                "task":{"name":"foo","url":"http://localhost:8080/job/foo/","color":"blue"},
-                                "why":"Waiting for next available executor",
-                                "buildableStartMilliseconds":1348006840462
-                            }
-                        }
-                        */
-
-                        JsonObject payload = 
-                            new JsonObject()
-                                .putString("action", "canRun")
-                                .putObject(
-                                    "item",
-                                    new JsonObject()
-                                        .putBoolean("blocked", queueItem.isBlocked())
-                                        .putBoolean("buildable", queueItem.isBuildable())
-                                        .putNumber("id", queueItem.id)
-                                        .putNumber("inQueueSince", queueItem.getInQueueSince())
-                                        .putString("params", queueItem.getParams())
-                                        .putBoolean("stuck", queueItem.isStuck())
-                                        .putObject(
-                                            "task",
-                                            new JsonObject()
-                                                .putString("name", queueItem.task.getName())
-                                                .putString("url", Util.encode(jenkins.getRootUrl() + queueItem.task.getUrl()))
-                                        )
-                                );
-                        
-                        // need to serialize actions by hand
-                        JsonArray jsonActions = new JsonArray();
-                        for (Action action : queueItem.getActions()) {
-                            jsonActions.addObject(serializeToJson(action));
-                        }
-
-                        payload
-                            .getObject("item")
-                            .putArray("actions", jsonActions);
-
-                        if (queueItem instanceof Queue.NotWaitingItem) {
-                            payload
-                                .getObject("item")
-                                .putNumber(
-                                    "buildableStartMilliseconds",
-                                    ((Queue.NotWaitingItem) queueItem).buildableStartMilliseconds
-                                );
-                        } else if (queueItem instanceof Queue.WaitingItem) {
-                            payload
-                                .getObject("item")
-                                .putNumber(
-                                    "timestamp",
-                                    ((Queue.WaitingItem) queueItem).timestamp.getTimeInMillis()
-                                );
-                        }
-
-                        eventBus.send(_handlerId, payload,
+                        eventBus.send(_handlerId, createPayload(queueItem),
                             new Handler<Message<JsonObject>>() {
                                 public void handle(final Message<JsonObject> msg) {
                                     replyQueue.add(msg.body);
@@ -269,7 +206,7 @@ public class EventBusQueueTaskDispatcher
                 final JsonObject reply = replyQueue.poll(10, TimeUnit.SECONDS);
                 
                 if (reply == null) {
-                    logger.warn("timeout waiting for reply from {}", registeredHandlerId);
+                    logger.error("timeout waiting for reply from {}", registeredHandlerId);
                 } else {
                     if (! reply.getBoolean("canRun", true)) {
                         cause = new CauseOfBlockage() {
@@ -281,7 +218,7 @@ public class EventBusQueueTaskDispatcher
                     }
                 }
             } catch (InterruptedException e) {
-                logger.warn("interrupted waiting for reply");
+                logger.error("interrupted waiting for reply");
             }
         }
         
@@ -290,6 +227,82 @@ public class EventBusQueueTaskDispatcher
     // }}}
 
     // ========================================================== private stuff
+
+    // {{{ createPayload
+    private JsonObject createPayload(final Queue.Item queueItem) {
+        // can't use serializeToJson() here; that'll cause an
+        // infinite loop!  I think it's due to "why".
+
+        /*
+        {
+            "action":"canRun",
+            "item":{
+                "actions":[
+                    {
+                        "causes":[{"shortDescription":"Started by user anonymous","userId":null,"userName":"anonymous"}]}
+                ],
+                "blocked":false,
+                "buildable":true,
+                "id":5,
+                "inQueueSince":1348006835051,
+                "params":"",
+                "stuck":false,
+                "task":{"name":"foo","url":"http://localhost:8080/job/foo/","color":"blue"},
+                "why":"Waiting for next available executor",
+                "buildableStartMilliseconds":1348006840462
+            }
+        }
+        */
+
+        JsonObject payload = 
+            new JsonObject()
+                .putString("action", "canRun")
+                .putObject(
+                    "item",
+                    new JsonObject()
+                        .putBoolean("blocked", queueItem.isBlocked())
+                        .putBoolean("buildable", queueItem.isBuildable())
+                        .putNumber("id", queueItem.id)
+                        .putNumber("inQueueSince", queueItem.getInQueueSince())
+                        .putString("params", queueItem.getParams())
+                        .putBoolean("stuck", queueItem.isStuck())
+                        .putObject(
+                            "task",
+                            new JsonObject()
+                                .putString("name", queueItem.task.getName())
+                                .putString("url", Util.encode(jenkins.getRootUrl() + queueItem.task.getUrl()))
+                        )
+                );
+        
+        // need to serialize actions by hand
+        JsonArray jsonActions = new JsonArray();
+        for (Action action : queueItem.getActions()) {
+            jsonActions.addObject(serializeToJson(action));
+        }
+
+        payload
+            .getObject("item")
+            .putArray("actions", jsonActions);
+
+        if (queueItem instanceof Queue.NotWaitingItem) {
+            payload
+                .getObject("item")
+                .putNumber(
+                    "buildableStartMilliseconds",
+                    ((Queue.NotWaitingItem) queueItem).buildableStartMilliseconds
+                );
+        } else if (queueItem instanceof Queue.WaitingItem) {
+            payload
+                .getObject("item")
+                .putNumber(
+                    "timestamp",
+                    ((Queue.WaitingItem) queueItem).timestamp.getTimeInMillis()
+                );
+        }
+
+        return payload;
+    }
+    // }}}
 
     // {{{ sendError
     private void sendError(final Message<JsonObject> message, final String error) {
