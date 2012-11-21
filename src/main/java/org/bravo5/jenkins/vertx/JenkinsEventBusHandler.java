@@ -33,14 +33,15 @@ import static org.bravo5.jenkins.vertx.SerializeUtil.serializeToJson;
 public class JenkinsEventBusHandler implements Handler<Message<JsonObject>>{
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final Jenkins jenkins = Jenkins.getInstance();
     private Map<String,Handler> registeredHandlers = new HashMap<>();
 
-    private EventBus eventBus;
+    private final EventBus eventBus;
+    private final Jenkins jenkins;
 
     // {{{ constructor
-    public JenkinsEventBusHandler(final EventBus eventBus) {
+    public JenkinsEventBusHandler(final EventBus eventBus, final Jenkins jenkins) {
         this.eventBus = eventBus;
+        this.jenkins = jenkins;
 
         eventBus.registerHandler("jenkins", this);
         registeredHandlers.put("jenkins", this);

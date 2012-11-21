@@ -52,7 +52,7 @@ public class PluginImpl extends Plugin {
         // https://github.com/vert-x/vert.x/issues/355
         vertx = Vertx.newVertx(25000, "0.0.0.0");
 
-        handler = new JenkinsEventBusHandler(vertx.eventBus());
+        handler = new JenkinsEventBusHandler(vertx.eventBus(), jenkins);
 
         // hello, world.
         vertx.eventBus().publish(
